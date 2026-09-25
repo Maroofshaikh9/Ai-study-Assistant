@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { getDb } from "@/lib/mongodb";
 
 export async function POST(request: Request) {

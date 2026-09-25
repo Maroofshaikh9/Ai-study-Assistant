@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { Db } from "mongodb";
 
 export async function ensureAdmin(db: Db) {
