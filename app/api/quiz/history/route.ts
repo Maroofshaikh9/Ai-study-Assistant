@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireStudent } from "@/lib/auth-guard";
+import { requireStudent, getOwnedDocument } from "@/lib/auth-guard";
 import { getDb } from "@/lib/mongodb";
 
 export async function POST(request: Request) {
@@ -8,12 +8,19 @@ export async function POST(request: Request) {
 
   try {
     const data = await request.json();
-    const { documentId, documentName, questionCount, score, correctCount, wrongCount, questions } = data;
+    const { documentId, questionCount, score, correctCount, wrongCount, questions } = data;
 
-    if (!documentId || !documentName || !questions || !Array.isArray(questions)) {
+    if (!documentId || !questions || !Array.isArray(questions)) {
       return NextResponse.json({ error: "Invalid quiz result data." }, { status: 400 });
     }
 
+    // SEC-08: Validate document ownership
+    const owned = await getOwnedDocument(auth.session.user.id, documentId);
+    if ("error" in owned) {
+      return NextResponse.json({ error: "Document not found." }, { status: 404 });
+    }
+
+    const documentName = owned.document.filename || String(data.documentName || "Notes");
     const db = await getDb();
     
     // Save the attempt

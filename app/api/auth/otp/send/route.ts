@@ -3,6 +3,7 @@ import { getDb } from "@/lib/mongodb";
 import { sendOtpEmail } from "@/lib/email";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
@@ -19,6 +20,16 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Please enter a valid email address, such as name@gmail.com." },
         { status: 400 }
+      );
+    }
+
+    // Source IP rate limit: max 5 OTP requests per 10 minutes per IP
+    const clientIp = getClientIp(req);
+    const ipCheck = await checkRateLimit(`otp:ip:${clientIp}`, 5, 600);
+    if (!ipCheck.allowed) {
+      return NextResponse.json(
+        { error: "Too many verification code requests from this network. Please try again later." },
+        { status: 429 }
       );
     }
 

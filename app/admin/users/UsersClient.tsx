@@ -24,6 +24,10 @@ export default function UsersClient({ initialUsers }: { initialUsers: UserRow[] 
     if (deleting) {
       return;
     }
+    const confirmed = window.confirm("Are you sure you want to delete this user?");
+    if (!confirmed) {
+      return;
+    }
     setDeleting(id);
     setError("");
     const response = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });

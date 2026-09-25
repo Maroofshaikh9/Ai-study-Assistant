@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireStudent } from "@/lib/auth-guard";
+import { requireStudent, getOwnedDocument } from "@/lib/auth-guard";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
@@ -9,12 +9,19 @@ export async function POST(request: Request) {
 
   try {
     const data = await request.json();
-    const { chatId, documentId, documentName, messages } = data;
+    const { chatId, documentId, messages } = data;
 
-    if (!documentId || !documentName || !Array.isArray(messages)) {
+    if (!documentId || !Array.isArray(messages)) {
       return NextResponse.json({ error: "Invalid chat data." }, { status: 400 });
     }
 
+    // SEC-08: Validate document ownership
+    const owned = await getOwnedDocument(auth.session.user.id, documentId);
+    if ("error" in owned) {
+      return NextResponse.json({ error: "Document not found." }, { status: 404 });
+    }
+
+    const documentName = owned.document.filename || String(data.documentName || "Notes");
     const db = await getDb();
     
     if (chatId) {

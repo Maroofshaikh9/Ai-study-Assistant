@@ -62,7 +62,7 @@ export default function AdminSidebar({ name }: { name: string }) {
         <div className="p-3 border-t border-white/10">
           <button
             type="button"
-            onClick={() => signOut({ callbackUrl: "/admin/login" })}
+            onClick={() => signOut({ callbackUrl: "/login" })}
             className="w-full text-left rounded-md px-3 py-2 text-sm hover:bg-white/10"
           >
             Logout

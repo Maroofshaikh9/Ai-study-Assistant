@@ -33,7 +33,12 @@ export async function DELETE(
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
+    const userIdStr = user._id.toString();
     await db.collection("documents").deleteMany({ userId: user._id });
+    await db.collection("quizAttempts").deleteMany({ userId: { $in: [userIdStr, user._id] } });
+    await db.collection("flashcardHistory").deleteMany({ userId: { $in: [userIdStr, user._id] } });
+    await db.collection("summaryHistory").deleteMany({ userId: { $in: [userIdStr, user._id] } });
+    await db.collection("chatHistory").deleteMany({ userId: { $in: [userIdStr, user._id] } });
     await db.collection("users").deleteOne({ _id: user._id });
 
     return NextResponse.json({ message: "User deleted." });

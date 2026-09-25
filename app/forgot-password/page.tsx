@@ -223,19 +223,19 @@ export default function ForgotPasswordPage() {
               <div className="text-xs space-y-1 mt-2">
                 <p className="font-medium text-slate-700">Password must contain:</p>
                 <p className={hasLength ? "text-green-600" : "text-slate-500"}>
-                  {hasLength ? "✓" : "○"} At least 8 characters
+                  {hasLength ? "✓" : "✗"} At least 8 characters
                 </p>
                 <p className={hasUpper ? "text-green-600" : "text-slate-500"}>
-                  {hasUpper ? "✓" : "○"} One uppercase letter
+                  {hasUpper ? "✓" : "✗"} One uppercase letter
                 </p>
                 <p className={hasLower ? "text-green-600" : "text-slate-500"}>
-                  {hasLower ? "✓" : "○"} One lowercase letter
+                  {hasLower ? "✓" : "✗"} One lowercase letter
                 </p>
                 <p className={hasNumber ? "text-green-600" : "text-slate-500"}>
-                  {hasNumber ? "✓" : "○"} One number
+                  {hasNumber ? "✓" : "✗"} One number
                 </p>
                 <p className={hasSpecial ? "text-green-600" : "text-slate-500"}>
-                  {hasSpecial ? "✓" : "○"} One special character (@$!%*?&)
+                  {hasSpecial ? "✓" : "✗"} One special character (@$!%*?&)
                 </p>
               </div>
             )}

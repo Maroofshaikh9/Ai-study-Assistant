@@ -72,14 +72,51 @@ export async function POST(request: Request) {
       );
     }
 
+    if (file.size === 0) {
+      return NextResponse.json(
+        { error: "The selected PDF file is empty." },
+        { status: 400 }
+      );
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
-    // pdf-parse extracts readable text before the file is stored.
-    const text = await extractTextFromPdf(buffer);
+
+    // SEC-05: Verify PDF signature (%PDF-)
+    if (buffer.length < 5 || buffer.subarray(0, 5).toString("ascii") !== "%PDF-") {
+      return NextResponse.json(
+        { error: "The uploaded file is not a valid PDF document." },
+        { status: 400 }
+      );
+    }
+
+    let text = "";
+    try {
+      // pdf-parse extracts readable text before the file is stored.
+      text = await extractTextFromPdf(buffer);
+    } catch (parseError) {
+      const msg =
+        parseError instanceof Error
+          ? parseError.message
+          : "Invalid or corrupted PDF file.";
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
+
+    // SEC-05: Sanitize filename (strip directory traversal, control chars, clamp to 100 chars)
+    const rawName = file.name || "document.pdf";
+    const baseName = rawName.replace(/^.*[\\\/]/, "").trim();
+    const sanitizedName = baseName
+      .replace(/[^\w\s.-]/g, "_")
+      .replace(/\s+/g, " ")
+      .slice(0, 100);
+
+    const finalFilename = sanitizedName.toLowerCase().endsWith(".pdf")
+      ? sanitizedName
+      : `${sanitizedName || "document"}.pdf`;
 
     const db = await getDb();
     const result = await db.collection("documents").insertOne({
       userId: new ObjectId(auth.session.user.id),
-      filename: file.name,
+      filename: finalFilename,
       size: file.size,
       text,
       createdAt: new Date(),
@@ -87,7 +124,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       id: result.insertedId.toString(),
-      filename: file.name,
+      filename: finalFilename,
       message: "Notes uploaded successfully.",
     });
   } catch (error) {

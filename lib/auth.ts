@@ -31,12 +31,8 @@ export const authOptions: AuthOptions = {
         const db = await getDb();
         const user = await db.collection("users").findOne({ email });
 
-        if (!user) {
-          throw new Error("No StudyMate account is associated with this email. Please sign up first.");
-        }
-
-        if (!user.password) {
-          throw new Error("This account does not have a password set. Please log in with Google.");
+        if (!user || !user.password) {
+          throw new Error("Invalid email or password.");
         }
 
         if (user.lockedUntil && new Date() < new Date(user.lockedUntil)) {
@@ -63,8 +59,12 @@ export const authOptions: AuthOptions = {
               { _id: user._id },
               { $set: { failedLoginAttempts: attempts } }
             );
-            throw new Error(`Incorrect password. ${6 - attempts} attempts remaining.`);
+            throw new Error(`Invalid email or password. ${6 - attempts} attempts remaining.`);
           }
+        }
+
+        if (user.isVerified === false) {
+          throw new Error("Please verify your email address before logging in.");
         }
 
         await db.collection("users").updateOne(

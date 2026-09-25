@@ -78,6 +78,14 @@ export async function getDb(): Promise<Db> {
     try {
       await db.collection("users").createIndex({ email: 1 }, { unique: true });
       await db.collection("documents").createIndex({ userId: 1, createdAt: -1 });
+      // SEC-09: Add compound indexes matching actual query and sort patterns
+      await db.collection("quizAttempts").createIndex({ userId: 1, createdAt: -1 });
+      await db.collection("flashcardHistory").createIndex({ userId: 1, createdAt: -1 });
+      await db.collection("summaryHistory").createIndex({ userId: 1, createdAt: -1 });
+      await db.collection("chatHistory").createIndex({ userId: 1, updatedAt: -1 });
+      // Rate limits TTL auto-expiration index
+      await db.collection("rateLimits").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+      await db.collection("rateLimits").createIndex({ key: 1, expiresAt: 1 });
       await ensureAdmin(db);
       
       if (isDev) {

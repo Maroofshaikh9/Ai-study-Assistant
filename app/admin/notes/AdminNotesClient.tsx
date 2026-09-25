@@ -24,6 +24,10 @@ export default function AdminNotesClient({ initialNotes }: { initialNotes: NoteR
     if (deleting) {
       return;
     }
+    const confirmed = window.confirm("Are you sure you want to delete this note?");
+    if (!confirmed) {
+      return;
+    }
     setDeleting(id);
     setError("");
     const response = await fetch(`/api/admin/documents/${id}`, {

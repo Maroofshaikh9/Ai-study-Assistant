@@ -1,10 +1,20 @@
 import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import AdminNotesClient from "./AdminNotesClient";
 
 export default async function AdminNotesPage() {
   const session = await getServerSession(authOptions);
+
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  if (session.user.role !== "admin") {
+    redirect("/dashboard");
+  }
+
   let notes: { id: string; filename: string; size: number; createdAt: string; ownerName: string; ownerEmail: string }[] = [];
 
   try {

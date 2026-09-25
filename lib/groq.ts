@@ -24,11 +24,19 @@ export function extractJson(text: string) {
   return JSON.parse(cleaned.slice(start, end + 1));
 }
 
-const GROQ_MODELS = [
+const FALLBACK_MODELS = [
   "openai/gpt-oss-20b",
   "qwen/qwen3.8-27b",
   "openai/gpt-oss-120b"
 ];
+
+function getModelsToTry(): string[] {
+  const configured = process.env.GROQ_MODEL?.trim();
+  if (configured) {
+    return [configured, ...FALLBACK_MODELS.filter((m) => m !== configured)];
+  }
+  return FALLBACK_MODELS;
+}
 
 export async function callGroq(
   messages: ChatMessage[],
@@ -44,7 +52,8 @@ export async function callGroq(
   let lastTechnicalError: Error | null = null;
   let isTechnicalFailure = false;
 
-  for (const model of GROQ_MODELS) {
+  const models = getModelsToTry();
+  for (const model of models) {
     try {
       console.log(`[Groq] Attempting model: ${model}`);
       const response = await fetch(
