@@ -63,12 +63,6 @@ export default function SiteHeader() {
           >
             How it Works
           </a>
-          <a
-            href="#about"
-            className="hover:text-brand-600 transition-colors"
-          >
-            About
-          </a>
         </nav>
 
         {/* Action Buttons */}
@@ -124,13 +118,6 @@ export default function SiteHeader() {
               className="py-2 px-3 rounded-lg hover:bg-slate-100 hover:text-brand-600 transition-colors"
             >
               How it Works
-            </a>
-            <a
-              href="#about"
-              onClick={() => setOpen(false)}
-              className="py-2 px-3 rounded-lg hover:bg-slate-100 hover:text-brand-600 transition-colors"
-            >
-              About
             </a>
             <hr className="border-slate-100 my-1" />
             <div className="flex flex-col gap-2 pt-1">

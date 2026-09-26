@@ -7,12 +7,9 @@ import {
   Layers,
   MessageSquareCode,
   ArrowRight,
-  ShieldCheck,
-  Zap,
   BookOpen,
   CheckCircle2,
   Cpu,
-  GraduationCap,
   FileCheck,
   TrendingUp,
 } from "lucide-react";
@@ -79,14 +76,6 @@ const steps = [
   },
 ];
 
-const techStack = [
-  { name: "Next.js 14", detail: "App Router & SSR" },
-  { name: "TypeScript", detail: "End-to-End Type Safety" },
-  { name: "Tailwind CSS", detail: "Clean Luxe Design System" },
-  { name: "MongoDB", detail: "Native Driver 6.x Persistence" },
-  { name: "Groq LLaMA 3.1", detail: "Sub-Second AI Inference" },
-  { name: "NextAuth v4", detail: "Secure JWT & Google OAuth" },
-];
 
 export default function HomePage() {
   return (
@@ -343,77 +332,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ARCHITECTURE & ABOUT SECTION */}
-      <section id="about" className="py-20 md:py-28 bg-white border-b border-slate-200/70">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="grid lg:grid-cols-12 gap-12 items-center">
-            <div className="lg:col-span-6 space-y-6">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/60 uppercase tracking-wide">
-                <GraduationCap className="w-3.5 h-3.5" />
-                Academic Capstone Architecture
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-                Built Strictly According to University Specifications
-              </h2>
-              <p className="text-sm text-slate-600 leading-relaxed font-normal">
-                StudyMate was engineered for academic rigor, security, and fast execution. It connects native PDF text extraction directly to Groq&apos;s high-throughput LLaMA 3.1 LLM, providing instantaneous answers without complex external server overhead.
-              </p>
-
-              <div className="space-y-3 pt-2">
-                <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70">
-                  <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-800">Defense-in-Depth Authentication</h4>
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                      Secured via NextAuth v4, email OTP verification, pure JavaScript bcryptjs password hashing (cost factor 10), and strict role-based access control.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70">
-                  <Zap className="w-5 h-5 text-cyan-600 shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-800">Evaluator &amp; Admin Oversight</h4>
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                      Includes a dedicated administrative dashboard allowing academic supervisors to monitor student uploads, user activity, and document statistics.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Architecture Tech Matrix */}
-            <div className="lg:col-span-6">
-              <div className="rounded-3xl border border-slate-200 bg-slate-50/50 p-6 md:p-8 space-y-4 shadow-sm">
-                <h3 className="text-base font-bold text-slate-800 flex items-center justify-between">
-                  <span>Approved Project Stack</span>
-                  <span className="text-[11px] font-semibold text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full border border-brand-200/60">
-                    LOCKED SPECS
-                  </span>
-                </h3>
-
-                <div className="grid sm:grid-cols-2 gap-3 pt-2">
-                  {techStack.map((tech) => (
-                    <div
-                      key={tech.name}
-                      className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-xs space-y-1 hover:border-brand-200 transition-colors"
-                    >
-                      <p className="text-xs font-bold text-slate-800">{tech.name}</p>
-                      <p className="text-[11px] text-slate-500">{tech.detail}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="pt-3 text-[11px] text-slate-500 flex items-center justify-between border-t border-slate-200/80">
-                  <span>B.Sc. Computer Science • 2026</span>
-                  <span className="font-semibold text-slate-700">Production Deployment: Vercel</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* FINAL CALL TO ACTION */}
       <section className="py-20 bg-gradient-to-br from-slate-900 via-slate-850 to-brand-950 text-white text-center relative overflow-hidden">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 space-y-6 relative z-10">
@@ -459,7 +377,6 @@ export default function HomePage() {
             <a href="#home" className="hover:text-brand-600 transition-colors">Home</a>
             <a href="#features" className="hover:text-brand-600 transition-colors">Features</a>
             <a href="#how-it-works" className="hover:text-brand-600 transition-colors">Workflow</a>
-            <a href="#about" className="hover:text-brand-600 transition-colors">Specifications</a>
             <Link href="/login" className="hover:text-brand-600 transition-colors">Sign In</Link>
           </div>
         </div>
