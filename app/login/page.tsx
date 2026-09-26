@@ -5,7 +5,7 @@ import { FormEvent, useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Notice from "@/components/Notice";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Sparkles, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -76,102 +76,163 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f7f6] flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md card p-6 md:p-8">
-        <Link href="/" className="text-sm text-brand-700">
+    <div className="min-h-screen bg-mesh-academic flex flex-col justify-center items-center p-4 sm:p-6">
+      {/* Top Brand Link */}
+      <div className="w-full max-w-md mb-6 flex items-center justify-between">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-brand-600 transition-colors py-1 px-2.5 rounded-lg hover:bg-slate-100"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
           Back to Home
         </Link>
-        <h1 className="mt-4 text-2xl font-bold text-slate-800">Student Login</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Enter your email and password to continue.
-        </p>
+        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+          <div className="w-5 h-5 rounded-md bg-brand-600 text-white flex items-center justify-center text-[10px]">
+            SM
+          </div>
+          StudyMate
+        </div>
+      </div>
 
+      {/* Main Login Card */}
+      <div className="w-full max-w-md rounded-3xl border border-slate-200/90 bg-white p-7 sm:p-9 shadow-xl shadow-slate-900/5 space-y-6">
+        <div>
+          <div className="w-11 h-11 rounded-2xl bg-brand-50 border border-brand-200/60 text-brand-700 flex items-center justify-center mb-3 shadow-xs">
+            <Sparkles className="w-5 h-5 text-brand-600" />
+          </div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
+            Welcome back
+          </h1>
+          <p className="mt-1 text-xs text-slate-500">
+            Log in to access your study notes, quizzes, and AI tutor.
+          </p>
+        </div>
+
+        {/* Google OAuth Button */}
         <button
+          type="button"
           onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-          className="mt-6 w-full flex items-center justify-center gap-2 border border-slate-300 rounded-md py-2.5 hover:bg-slate-50 transition-colors"
+          className="w-full flex items-center justify-center gap-2.5 border border-slate-200 bg-white hover:bg-slate-50/80 rounded-xl py-2.5 px-4 text-xs font-semibold text-slate-700 shadow-xs hover:border-slate-300 transition-all duration-200"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24">
+          <svg width="18" height="18" viewBox="0 0 24 24" className="shrink-0">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
           </svg>
-          <span className="text-sm font-medium text-slate-700">Continue with Google</span>
+          <span>Continue with Google</span>
         </button>
 
-        <div className="flex items-center gap-4 mt-6">
-          <div className="flex-1 h-px bg-slate-200"></div>
-          <span className="text-xs text-slate-400 font-medium">OR</span>
-          <div className="flex-1 h-px bg-slate-200"></div>
+        {/* Divider */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-px bg-slate-200/80"></div>
+          <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">
+            OR
+          </span>
+          <div className="flex-1 h-px bg-slate-200/80"></div>
         </div>
 
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+        {/* Credentials Form */}
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <Notice type="error" text={countdown ? `Too many incorrect attempts. ${countdown}` : error} />
-          
-          <label className="block text-sm">
-            Email
-            <input
-              type="email"
-              required
-              className="mt-1 w-full border border-slate-300 rounded-md px-3 py-2"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              disabled={!!lockedUntil || loading}
-            />
-          </label>
-          
-          <label className="block text-sm">
-            Password
-            <div className="relative mt-1">
+
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+              Email Address
+            </label>
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <Mail className="w-4 h-4" />
+              </div>
+              <input
+                type="email"
+                required
+                placeholder="student@university.edu"
+                className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 shadow-xs hover:border-slate-300 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all disabled:bg-slate-50"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                disabled={!!lockedUntil || loading}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                Password
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-xs font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+              >
+                Forgot password?
+              </Link>
+            </div>
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <Lock className="w-4 h-4" />
+              </div>
               <input
                 type={showPassword ? "text" : "password"}
                 required
-                className="w-full border border-slate-300 rounded-md px-3 py-2 pr-10"
+                placeholder="••••••••"
+                className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm font-medium text-slate-900 placeholder:text-slate-400 shadow-xs hover:border-slate-300 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all disabled:bg-slate-50"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 disabled={!!lockedUntil || loading}
               />
               <button
                 type="button"
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
+                className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-          </label>
-          
-          <div className="flex items-center justify-between text-sm">
-            <label className="flex items-center gap-2 text-slate-600">
+          </div>
+
+          <div className="flex items-center text-xs font-medium text-slate-600 pt-1">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
               <input
                 type="checkbox"
+                className="rounded border-slate-300 text-brand-600 focus:ring-brand-500/30 w-4 h-4 cursor-pointer"
                 checked={remember}
                 onChange={(event) => setRemember(event.target.checked)}
                 disabled={!!lockedUntil || loading}
               />
-              Remember me
+              <span>Remember my session</span>
             </label>
-            <Link href="/forgot-password" className="text-brand-700 font-medium">
-              Forgot password?
-            </Link>
           </div>
-          
+
           <button
             type="submit"
             disabled={loading || !!lockedUntil}
-            className="w-full bg-brand-700 text-white py-2.5 rounded-md disabled:opacity-60"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-sm font-bold text-white bg-gradient-to-r from-brand-600 to-emerald-600 hover:from-brand-700 hover:to-emerald-700 shadow-md shadow-brand-500/25 hover:shadow-lg hover:shadow-brand-500/35 hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:pointer-events-none"
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Signing In...</span>
+              </>
+            ) : (
+              <>
+                <span>Sign In to StudyMate</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </form>
 
-        <p className="mt-4 text-sm text-slate-600">
-          New student?{" "}
-          <Link href="/register" className="text-brand-700 font-medium">
-            Register
+        <div className="pt-2 text-center text-xs text-slate-500 border-t border-slate-100">
+          New to StudyMate?{" "}
+          <Link
+            href="/register"
+            className="font-bold text-brand-700 hover:text-brand-800 transition-colors"
+          >
+            Create an Account
           </Link>
-        </p>
+        </div>
       </div>
     </div>
   );

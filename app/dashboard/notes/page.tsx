@@ -18,11 +18,11 @@ export default async function NotesPage() {
         .sort({ createdAt: -1 })
         .toArray();
       
-      notes = docs.map(doc => ({
+      notes = docs.map((doc) => ({
         id: doc._id.toString(),
         filename: doc.filename,
         size: doc.size || 0,
-        createdAt: doc.createdAt.toISOString()
+        createdAt: doc.createdAt.toISOString(),
       }));
     }
   } catch (error) {
@@ -30,10 +30,14 @@ export default async function NotesPage() {
   }
 
   return (
-    <div className="max-w-5xl space-y-6">
+    <div className="space-y-6 animate-fade-in-up">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">My Notes</h1>
-        <p className="text-slate-500 mt-1">Upload PDF notes. Maximum size is 5 MB.</p>
+        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
+          My Study Materials
+        </h1>
+        <p className="text-xs text-slate-500 mt-1">
+          Upload and organize your course PDFs, lecture slides, and notes for AI analysis.
+        </p>
       </div>
 
       <NotesClient initialNotes={notes} />

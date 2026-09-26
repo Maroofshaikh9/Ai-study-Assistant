@@ -18,9 +18,9 @@ export default async function QuizPage() {
         .sort({ createdAt: -1 })
         .toArray();
       
-      notes = docs.map(doc => ({
+      notes = docs.map((doc) => ({
         id: doc._id.toString(),
-        filename: doc.filename
+        filename: doc.filename,
       }));
     }
   } catch (error) {
@@ -28,11 +28,13 @@ export default async function QuizPage() {
   }
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="space-y-6 animate-fade-in-up">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">AI Quiz</h1>
-        <p className="text-slate-500 mt-1">
-          Answer multiple-choice questions generated from your notes.
+        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
+          AI Quiz Practice
+        </h1>
+        <p className="text-xs text-slate-500 mt-1">
+          Generate multiple-choice practice tests from your uploaded notes to test exam readiness.
         </p>
       </div>
 

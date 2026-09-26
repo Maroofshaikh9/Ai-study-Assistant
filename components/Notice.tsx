@@ -1,3 +1,5 @@
+import { AlertCircle, CheckCircle2 } from "lucide-react";
+
 export default function Notice({
   type,
   text,
@@ -9,12 +11,25 @@ export default function Notice({
     return null;
   }
 
-  const classes =
-    type === "error"
-      ? "bg-red-50 text-red-700 border-red-200"
-      : "bg-green-50 text-green-800 border-green-200";
+  const isError = type === "error";
 
   return (
-    <p className={`border rounded-md px-3 py-2 text-sm ${classes}`}>{text}</p>
+    <div
+      role="alert"
+      className={`animate-fade-in-up flex items-start gap-3 rounded-xl p-3.5 text-sm border font-medium transition-all ${
+        isError
+          ? "bg-rose-50/90 text-rose-800 border-rose-200/80 shadow-sm shadow-rose-100"
+          : "bg-emerald-50/90 text-emerald-800 border-emerald-200/80 shadow-sm shadow-emerald-100"
+      }`}
+    >
+      <div className="shrink-0 mt-0.5">
+        {isError ? (
+          <AlertCircle className="w-4 h-4 text-rose-600" />
+        ) : (
+          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+        )}
+      </div>
+      <p className="leading-relaxed">{text}</p>
+    </div>
   );
 }

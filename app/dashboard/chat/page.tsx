@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import ChatForm from "./ChatForm";
+import { MessageSquareCode } from "lucide-react";
 
 export default async function ChatPage() {
   const session = await getServerSession(authOptions);
@@ -17,10 +18,10 @@ export default async function ChatPage() {
         .project({ filename: 1, createdAt: 1 })
         .sort({ createdAt: -1 })
         .toArray();
-      
-      notes = docs.map(doc => ({
+
+      notes = docs.map((doc) => ({
         id: doc._id.toString(),
-        filename: doc.filename
+        filename: doc.filename,
       }));
     }
   } catch (error) {
@@ -29,11 +30,19 @@ export default async function ChatPage() {
 
   return (
     <div className="max-w-4xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800">Study Chat</h1>
-        <p className="text-slate-500 mt-1">
-          Ask doubts about the selected document.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-6">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-50 border border-violet-200/60 text-violet-800 text-xs font-semibold tracking-wide uppercase mb-2">
+            <MessageSquareCode className="w-3.5 h-3.5 text-violet-600" />
+            Contextual AI Tutor
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+            AI Study Chat
+          </h1>
+          <p className="text-slate-600 text-sm sm:text-base mt-1">
+            Ask targeted questions, clarify difficult concepts, and get instant explanations anchored strictly to your notes.
+          </p>
+        </div>
       </div>
 
       <ChatForm initialNotes={notes} />

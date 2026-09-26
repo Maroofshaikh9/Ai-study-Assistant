@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import AdminNotesClient from "./AdminNotesClient";
+import { FileText } from "lucide-react";
 
 export default async function AdminNotesPage() {
   const session = await getServerSession(authOptions);
@@ -58,12 +59,22 @@ export default async function AdminNotesPage() {
   }
 
   return (
-    <div className="max-w-5xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800">All Notes</h1>
-        <p className="text-slate-500 mt-1">View and remove uploaded student PDFs.</p>
+    <div className="max-w-6xl space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-6">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-50 border border-violet-200/60 text-violet-800 text-xs font-semibold tracking-wide uppercase mb-2">
+            <FileText className="w-3.5 h-3.5 text-violet-600" />
+            Repository Audit
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+            Document Repository
+          </h1>
+          <p className="text-slate-600 text-sm sm:text-base mt-1">
+            Global catalog of all student-uploaded PDF lecture materials, file sizes, and owner attribution.
+          </p>
+        </div>
       </div>
-      
+
       <AdminNotesClient initialNotes={notes} />
     </div>
   );
