@@ -103,6 +103,8 @@ export const authOptions: AuthOptions = {
             createdAt: new Date(),
           });
           user.id = result.insertedId.toString();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (user as any).role = "student";
         } else {
           // If a user exists but doesn't have isVerified flag set
           if (!existing.isVerified) {
@@ -110,7 +112,7 @@ export const authOptions: AuthOptions = {
           }
           user.id = existing._id.toString();
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (user as any).role = existing.role;
+          (user as any).role = existing.role || "student";
         }
       }
       return true;
@@ -118,19 +120,24 @@ export const authOptions: AuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        token.role = (user as any).role || "student";
       }
       
-      if (token.id) {
+      // Fast path: if token already has an ID and role, reuse it without extra database latency
+      if (token.id && !token.role) {
         try {
           const db = await getDb();
           const { ObjectId } = await import("mongodb");
           const dbUser = await db.collection("users").findOne({ _id: new ObjectId(token.id as string) });
           if (dbUser) {
             token.role = dbUser.role || "student";
+          } else {
+            token.role = "student";
           }
         } catch {
           // fallback
-          token.role = token.role || "student";
+          token.role = "student";
         }
       }
       return token;

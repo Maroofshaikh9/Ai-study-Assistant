@@ -6,7 +6,7 @@ import NotesClient from "./NotesClient";
 
 export default async function NotesPage() {
   const session = await getServerSession(authOptions);
-  let notes: { id: string; filename: string; size: number; createdAt: string }[] = [];
+  let notes: { id: string; filename: string; size: number; type?: string; createdAt: string }[] = [];
 
   try {
     if (session?.user?.id) {
@@ -14,14 +14,15 @@ export default async function NotesPage() {
       const docs = await db
         .collection("documents")
         .find({ userId: new ObjectId(session.user.id) })
-        .project({ filename: 1, size: 1, createdAt: 1 })
+        .project({ filename: 1, size: 1, type: 1, createdAt: 1 })
         .sort({ createdAt: -1 })
         .toArray();
-      
+
       notes = docs.map((doc) => ({
         id: doc._id.toString(),
         filename: doc.filename,
         size: doc.size || 0,
+        type: doc.type || "pdf",
         createdAt: doc.createdAt.toISOString(),
       }));
     }
@@ -36,7 +37,7 @@ export default async function NotesPage() {
           My Study Materials
         </h1>
         <p className="text-xs text-slate-500 mt-1">
-          Upload and organize your course PDFs, lecture slides, and notes for AI analysis.
+          Upload and organize your course documents, lecture slides, spreadsheets, and scanned notes for AI analysis.
         </p>
       </div>
 

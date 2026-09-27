@@ -32,7 +32,8 @@ const FALLBACK_MODELS = [
 
 function getModelsToTry(): string[] {
   const configured = process.env.GROQ_MODEL?.trim();
-  if (configured) {
+  // Filter out retired/deprecated Groq models
+  if (configured && configured !== "llama-3.1-8b-instant") {
     return [configured, ...FALLBACK_MODELS.filter((m) => m !== configured)];
   }
   return FALLBACK_MODELS;
@@ -40,7 +41,8 @@ function getModelsToTry(): string[] {
 
 export async function callGroq(
   messages: ChatMessage[],
-  jsonMode = false
+  jsonMode = false,
+  temperature = 0.3
 ): Promise<string> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
@@ -67,7 +69,7 @@ export async function callGroq(
           body: JSON.stringify({
             model: model,
             messages,
-            temperature: 0.3,
+            temperature,
             ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
           }),
         }

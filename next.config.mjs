@@ -14,7 +14,14 @@ const cspHeader = [
 
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ["pdf-parse", "mongodb", "bcrypt"],
+    serverComponentsExternalPackages: [
+      "pdf-parse",
+      "mongodb",
+      "bcrypt",
+      "tesseract.js",
+      "mammoth",
+      "xlsx",
+    ],
     serverActions: {
       bodySizeLimit: "6mb",
     },

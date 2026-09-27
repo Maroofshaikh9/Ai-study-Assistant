@@ -59,7 +59,7 @@ const steps = [
   {
     step: "02",
     title: "High-Speed AI Processing",
-    description: "Groq LLaMA 3.1 parses raw content and maps core concepts, formulas, and critical exam topics.",
+    description: "Advanced AI models parse raw content and map core concepts, formulas, and critical exam topics.",
     icon: Cpu,
   },
   {
@@ -95,7 +95,7 @@ export default function HomePage() {
                 <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
                 <span>B.Sc. Computer Science Capstone Project</span>
                 <span className="text-slate-300">|</span>
-                <span className="text-slate-500">Groq LLaMA 3.1</span>
+                <span className="text-slate-500">Ultra-Fast AI</span>
               </div>
 
               {/* Main Headline */}

@@ -144,7 +144,7 @@ export default function SummaryForm({ initialNotes }: { initialNotes: Note[] }) 
 
       {/* SETUP VIEW */}
       {view === "setup" && (
-        <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-card space-y-6">
+        <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-card space-y-6 print:hidden">
           <div className="flex items-center justify-between pb-4 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
               <div className="w-10 h-10 rounded-2xl bg-teal-50 border border-teal-200/60 text-teal-700 flex items-center justify-center font-bold">
@@ -236,20 +236,19 @@ export default function SummaryForm({ initialNotes }: { initialNotes: Note[] }) 
         <section className="space-y-4">
           <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-9 shadow-card print:border-none print:shadow-none print:p-0 space-y-6">
             {/* Print Header */}
-            <div className="hidden print:block mb-6 border-b pb-4">
-              <h1 className="text-3xl font-bold text-slate-800">StudyMate</h1>
-              <h2 className="text-xl text-slate-600 mt-1">AI Document Summary</h2>
-              <div className="mt-4 text-xs text-slate-500 space-y-1">
-                <p>
-                  <span className="font-semibold text-slate-700">Document:</span> {currentResult.documentName}
-                </p>
-                <p>
-                  <span className="font-semibold text-slate-700">Format:</span> {currentResult.length} Summary
-                </p>
-                <p>
-                  <span className="font-semibold text-slate-700">Date:</span>{" "}
-                  {new Date(currentResult.createdAt).toLocaleDateString()}
-                </p>
+            <div className="hidden print:block print-academic-header">
+              <div className="flex justify-between items-baseline border-b border-slate-900 pb-2 mb-3">
+                <div>
+                  <h1 className="text-xl font-bold tracking-tight text-slate-950 uppercase">StudyMate</h1>
+                  <p className="text-xs font-medium text-slate-600 tracking-wide">Academic Study Assistant • AI Document Synthesis</p>
+                </div>
+                <div className="text-right text-xs text-slate-700">
+                  <p><span className="font-semibold text-slate-900">Document:</span> {currentResult.documentName}</p>
+                  <p><span className="font-semibold text-slate-900">Date:</span> {new Date(currentResult.createdAt).toLocaleDateString()}</p>
+                </div>
+              </div>
+              <div className="mb-3">
+                <h2 className="text-base font-bold text-slate-900">{currentResult.length} Academic Summary</h2>
               </div>
             </div>
 
@@ -347,7 +346,7 @@ export default function SummaryForm({ initialNotes }: { initialNotes: Note[] }) 
 
       {/* HISTORY VIEW */}
       {view === "history" && (
-        <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-card space-y-5">
+        <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-card space-y-5 print:hidden">
           <div className="flex items-center justify-between pb-4 border-b border-slate-100">
             <div>
               <h2 className="text-base font-bold text-slate-900">Summary Archive</h2>

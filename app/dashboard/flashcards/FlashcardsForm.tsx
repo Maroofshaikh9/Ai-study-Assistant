@@ -51,10 +51,18 @@ export default function FlashcardsForm({ initialNotes }: { initialNotes: Note[] 
     setFlipped(false);
 
     try {
+      const excludeQuestions = currentResult?.flashcards
+        ? currentResult.flashcards.map((c) => c.front)
+        : [];
+
       const response = await fetch("/api/flashcards", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ documentId, count: cardCount }),
+        body: JSON.stringify({
+          documentId,
+          count: cardCount,
+          excludeQuestions,
+        }),
       });
       const data = await response.json();
 
@@ -244,39 +252,38 @@ export default function FlashcardsForm({ initialNotes }: { initialNotes: Note[] 
 
       {view === "flashcards" && currentResult && (
         <section className="space-y-6">
-          {/* Print Only Layout */}
-          <div className="hidden print:block mb-6 border-b pb-4">
-            <h1 className="text-3xl font-bold text-slate-900">StudyMate</h1>
-            <h2 className="text-xl text-slate-600 mt-1">AI Flashcards</h2>
-            <div className="mt-4 text-sm text-slate-500 space-y-1">
-              <p>
-                <span className="font-semibold text-slate-700">Document:</span>{" "}
-                {currentResult.documentName}
-              </p>
-              <p>
-                <span className="font-semibold text-slate-700">Number of Flashcards:</span>{" "}
-                {totalCards}
-              </p>
-              <p>
-                <span className="font-semibold text-slate-700">Date:</span>{" "}
-                {new Date(currentResult.createdAt).toLocaleDateString()}
-              </p>
+          {/* Academic Print Header */}
+          <div className="hidden print:block print-academic-header">
+            <div className="flex justify-between items-baseline border-b border-slate-900 pb-2 mb-3">
+              <div>
+                <h1 className="text-xl font-bold tracking-tight text-slate-950 uppercase">StudyMate</h1>
+                <p className="text-xs font-medium text-slate-600 tracking-wide">Academic Study Assistant • Study Flashcards</p>
+              </div>
+              <div className="text-right text-xs text-slate-700">
+                <p><span className="font-semibold text-slate-900">Document:</span> {currentResult.documentName}</p>
+                <p><span className="font-semibold text-slate-900">Date:</span> {new Date(currentResult.createdAt).toLocaleDateString()}</p>
+              </div>
             </div>
-            <div className="mt-6 space-y-4">
-              {activeCards.map((card, i) => (
-                <div key={i} className="print-break-inside-avoid border p-4 rounded-xl">
-                  <h3 className="font-bold text-slate-800 mb-2">Card {i + 1}</h3>
-                  <div className="mb-2">
-                    <p className="text-xs uppercase font-semibold text-slate-500">Question:</p>
-                    <p className="text-slate-900 font-medium">{card.front}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase font-semibold text-slate-500">Answer:</p>
-                    <p className="text-slate-700">{card.back}</p>
-                  </div>
+            <div className="mb-3">
+              <h2 className="text-base font-bold text-slate-900">Review Cards ({totalCards} Total)</h2>
+            </div>
+          </div>
+
+          {/* Print Cards List */}
+          <div className="hidden print:block space-y-4">
+            {activeCards.map((card, i) => (
+              <div key={i} className="print-break-inside-avoid print-academic-box">
+                <h3 className="font-bold text-slate-900 mb-2">Card {i + 1}</h3>
+                <div className="mb-2">
+                  <p className="text-xs uppercase font-semibold text-slate-500">Question:</p>
+                  <p className="text-slate-900 font-medium">{card.front}</p>
                 </div>
-              ))}
-            </div>
+                <div>
+                  <p className="text-xs uppercase font-semibold text-slate-500">Answer:</p>
+                  <p className="text-slate-700">{card.back}</p>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Interactive Screen Layout */}
@@ -385,7 +392,10 @@ export default function FlashcardsForm({ initialNotes }: { initialNotes: Note[] 
                     <span className="text-xs font-medium text-emerald-400/80">Click to flip back</span>
                   </div>
 
-                  <div className="my-auto py-6">
+                  <div className="my-auto py-4 space-y-3 text-center">
+                    <div className="inline-block px-3 py-1 rounded-lg bg-emerald-900/60 border border-emerald-700/50 text-xs font-semibold text-emerald-300 max-w-full truncate">
+                      Q: {currentCard.front}
+                    </div>
                     <p className="text-lg sm:text-xl font-medium text-emerald-50 leading-relaxed text-center">
                       {currentCard.back || "No back content"}
                     </p>

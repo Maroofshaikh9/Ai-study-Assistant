@@ -164,7 +164,7 @@ export default async function DashboardPage() {
             </div>
           </div>
           <p className="text-2xl font-black text-slate-900">Groq API</p>
-          <p className="text-[11px] font-medium text-slate-500 mt-1">LLaMA 3.1 8B Instant</p>
+          <p className="text-[11px] font-medium text-slate-500 mt-1">High-Speed AI Synthesis</p>
         </div>
 
         <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-card hover:shadow-card-hover transition-all">

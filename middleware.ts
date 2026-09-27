@@ -10,11 +10,14 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
+  // Safe fallback to prevent redirect loops when role is missing/resolving
+  const role = token?.role || "student";
+
   if (path.startsWith("/admin")) {
     if (!token) {
       return NextResponse.redirect(new URL("/login", req.url));
     }
-    if (token.role !== "admin") {
+    if (role !== "admin") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
   }
@@ -23,7 +26,7 @@ export async function middleware(req: NextRequest) {
     if (!token) {
       return NextResponse.redirect(new URL("/login", req.url));
     }
-    if (token.role !== "student") {
+    if (role === "admin") {
       return NextResponse.redirect(new URL("/admin", req.url));
     }
   }

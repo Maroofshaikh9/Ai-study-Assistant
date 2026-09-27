@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, FormEvent } from "react";
 import DocumentSelect from "@/components/DocumentSelect";
 import Notice from "@/components/Notice";
+import FormattedChatMessage from "@/components/FormattedChatMessage";
+import { formatDateShort, formatTimeShort } from "@/lib/format";
 import {
   MessageSquareCode,
   History,
@@ -37,15 +39,27 @@ export default function ChatForm({ initialNotes }: { initialNotes: Note[] }) {
 
   const [historyList, setHistoryList] = useState<ChatHistory[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isRevealing, setIsRevealing] = useState(false);
   const [error, setError] = useState("");
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const streamIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Auto-scroll on new messages or loading state
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, loading]);
+  }, [messages, loading, isRevealing]);
+
+  // Clean up any pending streaming animation if component unmounts
+  useEffect(() => {
+    return () => {
+      if (streamIntervalRef.current) {
+        clearInterval(streamIntervalRef.current);
+      }
+    };
+  }, []);
 
   async function saveHistory(currentMessages: Message[], activeChatId: string | null) {
     try {
@@ -69,31 +83,31 @@ export default function ChatForm({ initialNotes }: { initialNotes: Note[] }) {
     return activeChatId;
   }
 
-  async function send(event: FormEvent, promptOverride?: string) {
+  async function send(event?: FormEvent, promptOverride?: string) {
     if (event) event.preventDefault();
-    const queryToSend = promptOverride || question;
-    if (loading || !documentId || !queryToSend.trim()) return;
+    const queryToSend = (promptOverride || question).trim();
+    if (loading || isRevealing || !documentId || !queryToSend) return;
 
     setError("");
-    const userMessage: Message = { role: "user", content: queryToSend.trim() };
-    const newMessages = [...messages, userMessage];
+    const userMessage: Message = { role: "user", content: queryToSend };
+    const updatedMessages = [...messages, userMessage];
 
-    const currentQuestion = queryToSend.trim();
+    const savedQuestion = queryToSend;
     const currentHistory = [...messages];
 
     setQuestion("");
-    setMessages(newMessages);
+    setMessages(updatedMessages);
     setLoading(true);
 
     try {
-      const activeChatId = await saveHistory(newMessages, chatId);
+      const activeChatId = await saveHistory(updatedMessages, chatId);
 
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           documentId,
-          question: currentQuestion,
+          question: savedQuestion,
           history: currentHistory,
         }),
       });
@@ -102,22 +116,76 @@ export default function ChatForm({ initialNotes }: { initialNotes: Note[] }) {
       if (!response.ok) {
         setLoading(false);
         setError(data.error || "Could not answer the question.");
+        // Restore user's question so it is not lost
+        setQuestion(savedQuestion);
         return;
       }
 
-      const finalMessages = [...newMessages, { role: "assistant" as const, content: data.answer }];
-      setMessages(finalMessages);
+      const fullAnswer = String(data.answer || "").trim();
+      if (!fullAnswer) {
+        setLoading(false);
+        setError("The AI returned an empty response. Please try again.");
+        setQuestion(savedQuestion);
+        return;
+      }
 
-      await saveHistory(finalMessages, activeChatId);
-
+      // Progressive reveal effect for modern streaming feel
+      setIsRevealing(true);
       setLoading(false);
+
+      // Tokenize by word chunks
+      const tokens = fullAnswer.match(/\S+\s*/g) || [fullAnswer];
+      let revealedCount = 0;
+
+      // Add placeholder assistant message
+      setMessages([...updatedMessages, { role: "assistant", content: "" }]);
+
+      // Dynamically calculate speed: 20-30ms ticks, 2-4 words per tick, finishing in ~1.5-2.5s
+      const wordsPerTick = Math.max(2, Math.ceil(tokens.length / 45));
+      const tickSpeedMs = 24;
+
+      streamIntervalRef.current = setInterval(() => {
+        revealedCount = Math.min(revealedCount + wordsPerTick, tokens.length);
+        const currentSlice = tokens.slice(0, revealedCount).join("");
+
+        setMessages((prev) => {
+          if (prev.length === 0) return prev;
+          const next = [...prev];
+          next[next.length - 1] = {
+            role: "assistant",
+            content: currentSlice,
+          };
+          return next;
+        });
+
+        if (revealedCount >= tokens.length) {
+          if (streamIntervalRef.current) {
+            clearInterval(streamIntervalRef.current);
+            streamIntervalRef.current = null;
+          }
+
+          // Ensure 100% byte-for-byte exact match to Groq response
+          const finalMessages: Message[] = [
+            ...updatedMessages,
+            { role: "assistant", content: fullAnswer },
+          ];
+          setMessages(finalMessages);
+          setIsRevealing(false);
+
+          // Persist completed dialogue to history
+          saveHistory(finalMessages, activeChatId);
+        }
+      }, tickSpeedMs);
     } catch {
       setLoading(false);
-      setError("Network error. Please try again.");
+      setIsRevealing(false);
+      setError("Network interruption. Please verify your connection and try again.");
+      setQuestion(savedQuestion);
     }
   }
 
   async function loadHistory() {
+    if (loading || isRevealing) return;
     setLoading(true);
     setError("");
     try {
@@ -136,6 +204,7 @@ export default function ChatForm({ initialNotes }: { initialNotes: Note[] }) {
   }
 
   function startNewChat() {
+    if (isRevealing) return;
     setMessages([]);
     setChatId(null);
     setError("");
@@ -143,13 +212,15 @@ export default function ChatForm({ initialNotes }: { initialNotes: Note[] }) {
   }
 
   function loadOldChat(chat: ChatHistory) {
+    if (isRevealing) return;
     setDocumentId(chat.documentId);
     setMessages(chat.messages);
     setChatId(chat._id);
     setView("chat");
   }
 
-  const currentDocName = initialNotes.find((n) => n.id === documentId)?.filename || "Unknown Document";
+  const currentDocName =
+    initialNotes.find((n) => n.id === documentId)?.filename || "Unknown Document";
 
   const promptSuggestions = [
     "What are the most critical formulas and theorems here?",
@@ -180,7 +251,8 @@ export default function ChatForm({ initialNotes }: { initialNotes: Note[] }) {
                     <button
                       type="button"
                       onClick={startNewChat}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-lg transition-colors"
+                      disabled={loading || isRevealing}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 disabled:opacity-40 rounded-lg transition-colors"
                     >
                       <PlusCircle className="w-3.5 h-3.5" />
                       New Session
@@ -188,7 +260,8 @@ export default function ChatForm({ initialNotes }: { initialNotes: Note[] }) {
                     <button
                       type="button"
                       onClick={() => window.print()}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                      disabled={loading || isRevealing}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 rounded-lg transition-colors"
                     >
                       <Printer className="w-3.5 h-3.5" />
                       Print / PDF
@@ -198,8 +271,8 @@ export default function ChatForm({ initialNotes }: { initialNotes: Note[] }) {
                 <button
                   type="button"
                   onClick={loadHistory}
-                  disabled={loading}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                  disabled={loading || isRevealing}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 rounded-lg transition-colors"
                 >
                   <History className="w-3.5 h-3.5" />
                   Past Sessions
@@ -215,6 +288,7 @@ export default function ChatForm({ initialNotes }: { initialNotes: Note[] }) {
                 notes={initialNotes}
                 value={documentId}
                 onChange={(id) => {
+                  if (loading || isRevealing) return;
                   setDocumentId(id);
                   setMessages([]);
                   setChatId(null);
@@ -225,17 +299,19 @@ export default function ChatForm({ initialNotes }: { initialNotes: Note[] }) {
           </div>
 
           {/* Print Only Header */}
-          <div className="hidden print:block mb-6 border-b pb-4">
-            <h1 className="text-3xl font-bold text-slate-900">StudyMate</h1>
-            <h2 className="text-xl text-slate-600 mt-1">Study Chat Transcript</h2>
-            <div className="mt-4 text-sm text-slate-500 space-y-1">
-              <p>
-                <span className="font-semibold text-slate-700">Document:</span> {currentDocName}
-              </p>
-              <p>
-                <span className="font-semibold text-slate-700">Date:</span>{" "}
-                {new Date().toLocaleDateString()}
-              </p>
+          <div className="hidden print:block print-academic-header">
+            <div className="flex justify-between items-baseline border-b border-slate-900 pb-2 mb-3">
+              <div>
+                <h1 className="text-xl font-bold tracking-tight text-slate-950 uppercase">StudyMate</h1>
+                <p className="text-xs font-medium text-slate-600 tracking-wide">Academic Study Assistant • Study Chat Transcript</p>
+              </div>
+              <div className="text-right text-xs text-slate-700">
+                <p><span className="font-semibold text-slate-900">Document:</span> {currentDocName}</p>
+                <p><span className="font-semibold text-slate-900">Date:</span> {formatDateShort(new Date())}</p>
+              </div>
+            </div>
+            <div className="mb-3">
+              <h2 className="text-base font-bold text-slate-900">Discussion Session Transcript</h2>
             </div>
           </div>
 
@@ -249,7 +325,7 @@ export default function ChatForm({ initialNotes }: { initialNotes: Note[] }) {
                   Active Context: <span className="text-brand-700 font-bold">{currentDocName}</span>
                 </span>
               </div>
-              <span className="text-xs text-slate-400 font-medium">Groq Llama 3 70B</span>
+              <span className="text-xs text-slate-400 font-medium">AI Study Assistant</span>
             </div>
 
             {/* Messages Scroll Area */}
@@ -281,8 +357,9 @@ export default function ChatForm({ initialNotes }: { initialNotes: Note[] }) {
                         <button
                           key={i}
                           type="button"
-                          onClick={(e) => send(e, prompt)}
-                          className="p-3 text-xs font-medium text-slate-700 bg-slate-50 hover:bg-brand-50 hover:text-brand-900 hover:border-brand-200 border border-slate-200/80 rounded-xl transition-all flex items-start gap-2 group"
+                          disabled={loading || isRevealing}
+                          onClick={() => send(undefined, prompt)}
+                          className="p-3 text-xs font-medium text-slate-700 bg-slate-50 hover:bg-brand-50 hover:text-brand-900 hover:border-brand-200 border border-slate-200/80 rounded-xl transition-all flex items-start gap-2 group disabled:opacity-50"
                         >
                           <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-600 mt-0.5 shrink-0" />
                           <span>{prompt}</span>
@@ -306,22 +383,32 @@ export default function ChatForm({ initialNotes }: { initialNotes: Note[] }) {
                     )}
 
                     <div
-                      className={`max-w-[85%] sm:max-w-[78%] rounded-2xl p-4 sm:p-5 text-sm leading-relaxed ${
+                      className={`max-w-[88%] sm:max-w-[80%] rounded-2xl p-4 sm:p-5 text-sm leading-relaxed ${
                         message.role === "user"
-                          ? "bg-slate-900 text-white rounded-tr-sm shadow-md"
-                          : "bg-slate-50 text-slate-800 border border-slate-200/80 rounded-tl-sm shadow-sm"
+                          ? "bg-slate-900 text-white rounded-tr-sm shadow-md print:bg-white print:text-black print:border print:border-slate-400 print:shadow-none"
+                          : "bg-slate-50/90 text-slate-800 border border-slate-200/80 rounded-tl-sm shadow-xs print:bg-white print:text-black print:border print:border-slate-300 print:shadow-none"
                       }`}
                     >
-                      <div className="flex items-center gap-2 mb-1.5">
+                      <div className="flex items-center gap-2 mb-2">
                         <span
                           className={`text-xs font-bold uppercase tracking-wider ${
-                            message.role === "user" ? "text-slate-300" : "text-brand-700"
+                            message.role === "user" ? "text-slate-300 print:text-black" : "text-brand-700 print:text-black"
                           }`}
                         >
                           {message.role === "user" ? "You" : "StudyMate Tutor"}
                         </span>
                       </div>
-                      <p className="whitespace-pre-wrap">{message.content}</p>
+
+                      {message.role === "user" ? (
+                        <p className="whitespace-pre-wrap">{message.content}</p>
+                      ) : (
+                        <div>
+                          <FormattedChatMessage content={message.content} />
+                          {isRevealing && idx === messages.length - 1 && (
+                            <span className="inline-block w-2 h-4 ml-1 bg-brand-600 animate-pulse align-middle" />
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {message.role === "user" && (
@@ -334,13 +421,13 @@ export default function ChatForm({ initialNotes }: { initialNotes: Note[] }) {
               )}
 
               {loading && (
-                <div className="flex items-start gap-3 print:hidden">
+                <div className="flex items-start gap-3 print:hidden animate-fade-in">
                   <div className="w-8 h-8 rounded-xl bg-brand-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-brand-500/20 mt-1">
                     <Bot className="w-4 h-4" />
                   </div>
                   <div className="bg-slate-50 border border-slate-200/80 rounded-2xl rounded-tl-sm p-4 text-sm text-slate-600 flex items-center gap-3">
                     <Loader2 className="w-4 h-4 text-brand-600 animate-spin" />
-                    <span>Analyzing document and drafting explanation...</span>
+                    <span>Analyzing notes &amp; preparing explanation...</span>
                   </div>
                 </div>
               )}
@@ -359,15 +446,15 @@ export default function ChatForm({ initialNotes }: { initialNotes: Note[] }) {
                     ? "Ask a doubt about this document (e.g., clarify section 3)..."
                     : "Select a document above first..."
                 }
-                disabled={loading || !documentId}
+                disabled={loading || isRevealing || !documentId}
                 className="flex-1 border border-slate-200 rounded-xl px-4 py-3 bg-white text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 disabled:bg-slate-100 transition-all"
               />
               <button
                 type="submit"
-                disabled={loading || !documentId || !question.trim()}
+                disabled={loading || isRevealing || !documentId || !question.trim()}
                 className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm text-white bg-brand-600 hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-brand-600/20 transition-all shrink-0"
               >
-                {loading ? (
+                {loading || isRevealing ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
@@ -424,15 +511,12 @@ export default function ChatForm({ initialNotes }: { initialNotes: Note[] }) {
                       <span>•</span>
                       <span className="inline-flex items-center gap-1">
                         <Calendar className="w-3.5 h-3.5" />
-                        {new Date(chat.updatedAt).toLocaleDateString()}
+                        {formatDateShort(chat.updatedAt)}
                       </span>
                       <span>•</span>
                       <span className="inline-flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5" />
-                        {new Date(chat.updatedAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {formatTimeShort(chat.updatedAt)}
                       </span>
                     </div>
                   </div>
